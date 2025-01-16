@@ -1,0 +1,102 @@
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
+const gravatar = require("gravatar");
+
+// Define card schema
+const cardSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  description: { type: String },
+  priority: {
+    type: String,
+    enum: ["Without priority", "Low", "Medium", "High"],
+    default: "Without priority",
+  },
+  dueDate: { type: Date },
+});
+
+// Define column schema
+const columnSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  cards: [cardSchema], // Array of card documents
+});
+
+// Define project schema
+const projectSchema = new mongoose.Schema({
+  name: String,
+  columns: [columnSchema],
+  icon: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 7,
+  },
+  background: {
+    type: String,
+    enum: [...Array(15).keys()].map(String).concat("none"), // ['0', '1', ..., '14', 'none']
+    default: "none",
+  },
+});
+
+const userSchema = new mongoose.Schema(
+  {
+    username: {
+      type: String,
+      minLength: 3,
+      required: [true, "Username required"],
+    },
+    email: {
+      type: String,
+      required: [true, "Email is required"],
+      unique: true,
+    },
+    password: {
+      type: String,
+      required: [true, "Password is required"],
+    },
+    token: {
+      type: String,
+      default: null,
+    },
+    avatarURL: {
+      type: String,
+      minLength: 2,
+    },
+    verify: {
+      type: Boolean,
+      default: false,
+    },
+    verificationToken: {
+      type: String,
+      default: null,
+    },
+    theme: {
+      type: String,
+      enum: ["dark", "light", "violet"],
+      default: "light",
+    },
+    projects: [projectSchema], // Array of project documents
+  },
+  { versionKey: false, timestamps: true }
+);
+
+userSchema.methods.setPassword = function (password) {
+  this.password = bcrypt.hashSync(password, bcrypt.genSaltSync(10));
+};
+
+userSchema.methods.validPassword = function (password) {
+  return bcrypt.compareSync(password, this.password);
+};
+
+userSchema.pre("save", function (next) {
+  if (!this.avatarURL) {
+    this.avatarURL = gravatar.url(
+      this.email,
+      { s: 68, r: "pg", d: "identicon" },
+      true
+    );
+  }
+  next();
+});
+
+const User = mongoose.model("User", userSchema);
+module.exports = User;
