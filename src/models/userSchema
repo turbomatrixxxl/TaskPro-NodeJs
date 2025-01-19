@@ -22,7 +22,7 @@ const columnSchema = new mongoose.Schema({
 
 // Define project schema
 const projectSchema = new mongoose.Schema({
-  name: String,
+  name: { type: String, required: true },
   columns: [columnSchema],
   icon: {
     type: Number,
@@ -32,7 +32,24 @@ const projectSchema = new mongoose.Schema({
   },
   background: {
     type: String,
-    enum: [...Array(15).keys()].map(String).concat("none"), // ['0', '1', ..., '14', 'none']
+    enum: [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "none",
+    ],
     default: "none",
   },
 });

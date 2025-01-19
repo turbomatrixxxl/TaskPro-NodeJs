@@ -1,26 +1,33 @@
 const userServices = require("../services/userServices");
 
-const updateTheme = async (req, res) => {
+const updateTheme = async (req, res, next) => {
   try {
-    const userId = req.user.id; // Assuming user ID is stored in req.user after authentication
+    const userId = req.user.id;
+
     const { theme } = req.body;
 
     const updatedTheme = await userServices.updateTheme(userId, theme);
 
     res
       .status(200)
-      .json({ message: "Theme updated successfully", theme: updatedTheme });
+      .json({ message: "Theme updated successfully", User: updatedTheme });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(400).json({ status: "error", message: error.message });
+    next(error);
   }
 };
 
 const addProject = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { projectName } = req.body;
+    const { name, icon, background } = req.body;
 
-    const projects = await userServices.addProject(userId, projectName);
+    const projects = await userServices.addProject(
+      userId,
+      name,
+      icon,
+      background
+    );
 
     res.status(201).json({ message: "Project added successfully", projects });
   } catch (error) {
@@ -31,11 +38,40 @@ const addProject = async (req, res) => {
 const addColumn = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { projectId, columnName } = req.body;
+    const projectName = req.params.projectName;
+    console.log(projectName);
 
-    const project = await userServices.addColumn(userId, projectId, columnName);
+    const { columnName } = req.body;
+
+    const project = await userServices.addColumn(
+      userId,
+      projectName,
+      columnName
+    );
 
     res.status(201).json({ message: "Column added successfully", project });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+const updateColumn = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { projectName, columnName } = req.params;
+
+    const newColumnName = req.body;
+
+    const project = await userServices.updateColumn(
+      userId,
+      projectName,
+      columnName,
+      newColumnName
+    );
+
+    res
+      .status(201)
+      .json({ message: "Column title successfully updated", project });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -44,12 +80,13 @@ const addColumn = async (req, res) => {
 const addTask = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { projectId, columnId, taskData } = req.body;
+    const { projectName, columnName } = req.params;
+    const taskData = req.body;
 
     const column = await userServices.addTask(
       userId,
-      projectId,
-      columnId,
+      projectName,
+      columnName,
       taskData
     );
 
@@ -62,13 +99,14 @@ const addTask = async (req, res) => {
 const updateTask = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { projectId, columnId, taskId, updates } = req.body;
+    const { projectName, columnName, taskName } = req.params;
+    const updates = req.body;
 
     const task = await userServices.updateTask(
       userId,
-      projectId,
-      columnId,
-      taskId,
+      projectName,
+      columnName,
+      taskName,
       updates
     );
 
@@ -81,14 +119,15 @@ const updateTask = async (req, res) => {
 const moveTask = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { projectId, taskId, fromColumnId, toColumnId } = req.body;
+    const { projectName, columnName, taskName } = req.params;
+    const { toColumnName } = req.body;
 
     const task = await userServices.moveTask(
       userId,
-      projectId,
-      taskId,
-      fromColumnId,
-      toColumnId
+      projectName,
+      columnName,
+      taskName,
+      toColumnName
     );
 
     res.status(200).json({ message: "Task moved successfully", task });
@@ -100,13 +139,13 @@ const moveTask = async (req, res) => {
 const deleteTask = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { projectId, columnId, taskId } = req.body;
+    const { projectName, columnName, taskName } = req.params;
 
     const column = await userServices.deleteTask(
       userId,
-      projectId,
-      columnId,
-      taskId
+      projectName,
+      columnName,
+      taskName
     );
 
     res.status(200).json({ message: "Task deleted successfully", column });
@@ -118,12 +157,12 @@ const deleteTask = async (req, res) => {
 const deleteColumn = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { projectId, columnId } = req.body;
+    const { projectName, columnName } = req.params;
 
     const project = await userServices.deleteColumn(
       userId,
-      projectId,
-      columnId
+      projectName,
+      columnName
     );
 
     res.status(200).json({ message: "Column deleted successfully", project });
@@ -135,9 +174,9 @@ const deleteColumn = async (req, res) => {
 const deleteProject = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { projectId } = req.body;
+    const { projectName } = req.params;
 
-    const projects = await userServices.deleteProject(userId, projectId);
+    const projects = await userServices.deleteProject(userId, projectName);
 
     res.status(200).json({ message: "Project deleted successfully", projects });
   } catch (error) {
@@ -148,12 +187,15 @@ const deleteProject = async (req, res) => {
 const updateProjectAppearance = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { projectId, icon, background } = req.body;
+    console.log(userId);
+
+    const { projectName } = req.params;
+    const updates = req.body;
 
     const project = await userServices.updateProjectAppearance(
       userId,
-      projectId,
-      { icon, background }
+      projectName,
+      updates
     );
 
     res
@@ -168,6 +210,7 @@ module.exports = {
   updateTheme,
   addProject,
   addColumn,
+  updateColumn,
   addTask,
   updateTask,
   moveTask,

@@ -1,0 +1,8 @@
+version: "3.8"
+
+services:
+  backend:
+    build: . # This tells Docker Compose to build the image from the Dockerfile in the current directory
+    ports:
+      - "5000:5000" # Map port 5000 on the host to port 5000 in the container
+    restart: always # Automatically restart the container in case of errors

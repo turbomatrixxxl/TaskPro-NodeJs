@@ -5,45 +5,60 @@ const userController = require("../../controllers/userControllers");
 const { authMiddleware } = require("../../middlewares/authMiddleware");
 
 router.patch("/theme", authMiddleware, userController.updateTheme);
+
 router.post("/projects", authMiddleware, userController.addProject);
+
 router.post(
-  "/projects/:projectId/columns",
+  "/projects/:projectName/columns",
   authMiddleware,
   userController.addColumn
 );
+
+router.patch(
+  "/projects/:projectName/column/:columnName",
+  authMiddleware,
+  userController.updateColumn
+);
+
 router.post(
-  "/projects/:projectId/columns/:columnId/tasks",
+  "/projects/:projectName/columns/:columnName/tasks",
   authMiddleware,
   userController.addTask
 );
+
 router.patch(
-  "/projects/:projectId/columns/:columnId/tasks/:taskId",
+  "/projects/:projectName/column/:columnName/tasks/:taskName",
   authMiddleware,
   userController.updateTask
 );
+
 router.patch(
-  "/projects/:projectId/tasks/:taskId/move",
+  "/projects/:projectName/column/:columnName/tasks/:taskName/move",
   authMiddleware,
   userController.moveTask
 );
+
 router.delete(
-  "/projects/:projectId/columns/:columnId/tasks/:taskId",
+  "/projects/:projectName/columns/:columnName/tasks/:taskName",
   authMiddleware,
   userController.deleteTask
 );
+
 router.delete(
-  "/projects/:projectId/columns/:columnId",
+  "/projects/:projectName/columns/:columnName",
   authMiddleware,
   userController.deleteColumn
 );
+
 router.delete(
-  "/projects/:projectId",
+  "/projects/:projectName",
   authMiddleware,
   userController.deleteProject
 );
 
 router.patch(
-  "/projects/:projectId/appearance",
+  "/projects/:projectName/appearance",
+  authMiddleware,
   userController.updateProjectAppearance
 );
 

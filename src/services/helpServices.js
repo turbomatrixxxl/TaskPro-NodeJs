@@ -3,13 +3,14 @@ const sgMail = require("@sendgrid/mail");
 require("dotenv").config();
 
 const senderEmail = process.env.SECRET_EMAIL;
+const destination = process.env.SECRET_EMAIL_TO_SEND;
 
 const sendHelpEmail = async (email, comment) => {
   if (!email) throw new Error("Email is missing...!");
   if (!comment) throw new Error("Comment is missing...!");
 
   const msg = {
-    to: senderEmail,
+    to: destination,
     from: senderEmail,
     subject: "Help request",
     text: `From ${email}. Request: ${comment} `,

@@ -19,6 +19,8 @@ const { Jimp } = require("jimp");
 
 const Joi = require("joi");
 
+const bcrypt = require("bcryptjs");
+
 exports.register = async (req, res, next) => {
   const { username, email, password } = req.body;
 
@@ -115,20 +117,7 @@ exports.getCurrentUser = async (req, res, next) => {
       res.status(200).json({
         status: "success",
         code: 200,
-        data: {
-          id: result._id,
-          name: result.username,
-          email: result.email,
-          avatarURL: result.avatarURL,
-          token: result.token,
-          verify: result.verify,
-          dietaryInfo: result.dietaryInfo,
-          height: result.height,
-          age: result.age,
-          bloodType: result.bloodType,
-          desiredWeight: result.desiredWeight,
-          weight: result.weight,
-        },
+        data: result,
       });
     } else {
       // Returnați o eroare 404 sau 401 în funcție de situație
@@ -192,15 +181,26 @@ exports.handleResendVerificationEmail = async (req, res) => {
 };
 
 exports.updateUserInfo = async (req, res, next) => {
-  const { userId } = req.params; // Get userId from params
-  const { email, password } = req.body;
+  const { username, email, password } = req.body;
 
   try {
+    const authHeader = req.headers.authorization;
+    // console.log(authHeader);
+
+    if (!authHeader) {
+      // Dacă antetul "Authorization" lipsește, returnați o eroare de autentificare
+      return res
+        .status(401)
+        .json({ status: "error", message: "Missing Authorization header" });
+    }
+
+    const userId = extractUserId(authHeader);
+
     // Hash the password if a new password is provided
-    const updateFields = { email };
+    const updateFields = { username, email };
 
     if (password) {
-      const hashedPassword = bCrypt.hashSync(password, bCrypt.genSaltSync(10));
+      const hashedPassword = bcrypt.hashSync(password, bcrypt.genSaltSync(10));
       updateFields.password = hashedPassword;
     }
 

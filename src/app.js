@@ -39,8 +39,8 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use("/api", usersRouter);
-app.use("/api-helpEmail", helpRouter);
-app.use("/api/user", userRouter);
+app.use("/api", helpRouter);
+app.use("/api", userRouter);
 
 app.use(passport.initialize());
 
@@ -48,7 +48,8 @@ app.use((_, res, __) => {
   res.status(404).json({
     status: "error",
     code: 404,
-    message: "Use api on routes: /api/users, /api-docs or /api-helpEmail",
+    message:
+      "Use api on routes: /api/users, /api-docs , /api/theme, /api/projects, /api-helpEmail",
     data: "Not found",
   });
 });

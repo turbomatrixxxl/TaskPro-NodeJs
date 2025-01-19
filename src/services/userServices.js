@@ -7,150 +7,265 @@ const updateTheme = async (userId, theme) => {
   user.theme = theme;
   await user.save();
 
-  return user.theme;
+  return user;
 };
 
-const addProject = async (userId, projectName) => {
+const addProject = async (userId, projectName, icon, background) => {
   const user = await User.findById(userId);
   if (!user) throw new Error("User not found");
 
-  user.projects.push({ name: projectName, columns: [] });
+  user.projects.push({
+    name: projectName,
+    columns: [],
+    icon: icon ?? 0,
+    background: background ?? "none",
+  });
   await user.save();
 
-  return user.projects;
+  return user;
 };
 
-const addColumn = async (userId, projectId, columnName) => {
+const addColumn = async (userId, projectName, columnName) => {
   const user = await User.findById(userId);
   if (!user) throw new Error("User not found");
 
-  const project = user.projects.id(projectId);
+  const project = user.projects.find((project) => project.name === projectName);
   if (!project) throw new Error("Project not found");
 
   project.columns.push({ name: columnName, cards: [] });
+
   await user.save();
 
-  return project;
+  return user;
 };
 
-const addTask = async (userId, projectId, columnId, taskData) => {
+const updateColumn = async (userId, projectName, columnName, update) => {
   const user = await User.findById(userId);
   if (!user) throw new Error("User not found");
 
-  const project = user.projects.id(projectId);
+  const project = user.projects.find((project) => project.name === projectName);
   if (!project) throw new Error("Project not found");
 
-  const column = project.columns.id(columnId);
+  const column = project.columns.find((column) => column.name === columnName);
+  if (!column) {
+    throw new Error("Column not found");
+  } else {
+    column.name = update.name || column.name;
+  }
+
+  await user.save();
+
+  return user;
+};
+
+const addTask = async (userId, projectName, columnName, taskData) => {
+  const user = await User.findById(userId);
+  if (!user) throw new Error("User not found");
+
+  const project = user.projects.find((project) => project.name === projectName);
+  if (!project) throw new Error("Project not found");
+
+  const column = project.columns.find((column) => column.name === columnName);
   if (!column) throw new Error("Column not found");
+
+  // Ensure taskData has all required fields
+  const { title, description, priority, dueDate } = taskData;
+  if (!title) throw new Error("Title is required");
+  if (!description) throw new Error("Description is required");
+  if (!priority) throw new Error("Priority is required");
+  if (!dueDate) throw new Error("DueDate is required");
 
   column.cards.push(taskData);
   await user.save();
 
-  return column;
+  return user;
 };
 
-const updateTask = async (userId, projectId, columnId, taskId, updates) => {
-  const user = await User.findById(userId);
-  if (!user) throw new Error("User not found");
+const updateTask = async (
+  userId,
+  projectName,
+  columnName,
+  taskName,
+  updates
+) => {
+  try {
+    // Find the user by ID and the task using project and column names
+    const user = await User.findOne({ _id: userId });
 
-  const project = user.projects.id(projectId);
-  if (!project) throw new Error("Project not found");
+    if (!user) {
+      throw new Error("User not found");
+    }
 
-  const column = project.columns.id(columnId);
-  if (!column) throw new Error("Column not found");
+    // Find the specific project, column, and task
+    const project = user.projects.find(
+      (project) => project.name === projectName
+    );
+    if (!project) {
+      throw new Error("Project not found");
+    }
 
-  const task = column.cards.id(taskId);
-  if (!task) throw new Error("Task not found");
+    const column = project.columns.find((column) => column.name === columnName);
+    if (!column) {
+      throw new Error("Column not found");
+    }
 
-  Object.assign(task, updates);
-  await user.save();
+    const task = column.cards.find((card) => card.title === taskName);
+    if (!task) {
+      throw new Error("Task not found");
+    } else {
+      task.title = updates.title || task.title;
+      task.description = updates.description || task.description;
+      task.priority = updates.priority || task.priority;
+      task.dueDate = updates.dueDate ? new Date(updates.dueDate) : task.dueDate;
+    }
 
-  return task;
+    // Log the full task object to inspect its structure
+    // console.log("Task object:", task);
+
+    // console.log("updates object:", updates);
+
+    // Save the changes to the user document
+    await user.save();
+
+    // Log the task after update
+    // console.log("Task after update:", task);
+
+    return user;
+  } catch (error) {
+    throw new Error(error.message);
+  }
 };
 
 const moveTask = async (
   userId,
-  projectId,
-  taskId,
-  fromColumnId,
-  toColumnId
+  projectName,
+  columnName,
+  taskName,
+  toColumnName
 ) => {
-  const user = await User.findById(userId);
+  const user = await User.findOne({ _id: userId });
   if (!user) throw new Error("User not found");
 
-  const project = user.projects.id(projectId);
-  if (!project) throw new Error("Project not found");
-
-  const fromColumn = project.columns.id(fromColumnId);
-  if (!fromColumn) throw new Error("Source column not found");
-
-  const task = fromColumn.cards.id(taskId);
-  if (!task) throw new Error("Task not found");
-
-  fromColumn.cards.id(taskId).remove();
-
-  const toColumn = project.columns.id(toColumnId);
-  if (!toColumn) throw new Error("Target column not found");
-
-  toColumn.cards.push(task);
-  await user.save();
-
-  return task;
-};
-
-const deleteTask = async (userId, projectId, columnId, taskId) => {
-  const user = await User.findById(userId);
-  if (!user) throw new Error("User not found");
-
-  const project = user.projects.id(projectId);
-  if (!project) throw new Error("Project not found");
-
-  const column = project.columns.id(columnId);
-  if (!column) throw new Error("Column not found");
-
-  column.cards.id(taskId).remove();
-  await user.save();
-
-  return column;
-};
-
-const deleteColumn = async (userId, projectId, columnId) => {
-  const user = await User.findById(userId);
-  if (!user) throw new Error("User not found");
-
-  const project = user.projects.id(projectId);
-  if (!project) throw new Error("Project not found");
-
-  project.columns.id(columnId).remove();
-  await user.save();
-
-  return project;
-};
-
-const deleteProject = async (userId, projectId) => {
-  const user = await User.findById(userId);
-  if (!user) throw new Error("User not found");
-
-  user.projects.id(projectId).remove();
-  await user.save();
-
-  return user.projects;
-};
-
-const updateProjectAppearance = async (userId, projectId, updates) => {
-  const user = await User.findById(userId);
-  if (!user) throw new Error("User not found");
-
-  const project = user.projects.id(projectId);
-  if (!project) throw new Error("Project not found");
-
-  if (updates.icon !== undefined) {
-    if (updates.icon < 0 || updates.icon > 7)
-      throw new Error("Icon index out of range");
-    project.icon = updates.icon;
+  // Find the specific project
+  const project = user.projects.find((project) => project.name === projectName);
+  if (!project) {
+    throw new Error("Project not found");
   }
 
-  if (updates.background !== undefined) {
+  // Find the source column
+  const fromColumn = project.columns.find(
+    (column) => column.name === columnName
+  );
+  if (!fromColumn) {
+    throw new Error("Source column not found");
+  }
+
+  // Find the task in the source column
+  const taskIndex = fromColumn.cards.findIndex(
+    (card) => card.title === taskName
+  );
+  if (taskIndex === -1) throw new Error("Task not found");
+
+  // Remove the task from the source column
+  const [task] = fromColumn.cards.splice(taskIndex, 1);
+
+  // Find the target column
+  const toColumn = project.columns.find(
+    (column) => column.name === toColumnName
+  );
+  if (!toColumn) throw new Error("Target column not found");
+
+  // Add the task to the target column
+  toColumn.cards.push(task);
+
+  // Save the updated user document
+  await user.save();
+
+  return user;
+};
+
+const deleteTask = async (userId, projectName, columnName, taskName) => {
+  const user = await User.findById(userId);
+  if (!user) throw new Error("User not found");
+
+  // Find the specific project, column, and task
+  const project = user.projects.find((project) => project.name === projectName);
+  if (!project) {
+    throw new Error("Project not found");
+  }
+
+  const column = project.columns.find((column) => column.name === columnName);
+  if (!column) {
+    throw new Error("Column not found");
+  }
+
+  // Find the task in the source column
+  const taskIndex = column.cards.findIndex((card) => card.title === taskName);
+  if (taskIndex === -1) throw new Error("Task not found");
+
+  column.cards.splice(taskIndex, 1);
+
+  await user.save();
+
+  return user;
+};
+
+const deleteColumn = async (userId, projectName, columnName) => {
+  const user = await User.findById(userId);
+  if (!user) throw new Error("User not found");
+
+  // Find the specific project
+  const project = user.projects.find((project) => project.name === projectName);
+  if (!project) {
+    throw new Error("Project not found");
+  }
+
+  // Find the column in the source project
+  const columnIndex = project.columns.findIndex(
+    (column) => column.name === columnName
+  );
+  if (columnIndex === -1) throw new Error("Column not found");
+
+  project.columns.splice(columnIndex, 1);
+
+  await user.save();
+
+  return user;
+};
+
+const deleteProject = async (userId, projectName) => {
+  const user = await User.findById(userId);
+  if (!user) throw new Error("User not found");
+
+  // Find the column in the source project
+  const projectIndex = user.projects.findIndex(
+    (project) => project.name === projectName
+  );
+  if (projectIndex === -1) throw new Error("Project not found");
+
+  user.projects.splice(projectIndex, 1);
+
+  await user.save();
+
+  return user;
+};
+
+const updateProjectAppearance = async (userId, projectName, updates) => {
+  const user = await User.findOne({ _id: userId });
+  if (!user) throw new Error("User not found");
+
+  const project = user.projects.find((project) => project.name === projectName);
+
+  if (!project) {
+    throw new Error("Project not found");
+  } else {
+    project.name = updates.name || project.name;
+
+    if (updates.icon < 0 || updates.icon > 7) {
+      throw new Error("Icon index out of range");
+    }
+    project.icon = updates.icon || project.icon;
+
     if (
       ![...Array(15).keys()]
         .map(String)
@@ -159,17 +274,18 @@ const updateProjectAppearance = async (userId, projectId, updates) => {
     ) {
       throw new Error("Background index out of range");
     }
-    project.background = updates.background;
+    project.background = updates.background || project.background;
   }
 
   await user.save();
-  return project;
+  return user;
 };
 
 module.exports = {
   updateTheme,
   addProject,
   addColumn,
+  updateColumn,
   addTask,
   updateTask,
   moveTask,
