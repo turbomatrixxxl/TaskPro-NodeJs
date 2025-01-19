@@ -7,8 +7,8 @@
   },
   "servers": [
     {
-      "url": "http://localhost:5000",
-      "description": "Local server"
+      "url": "https://taskpro-nodejs.onrender.com",
+      "description": "Hosting server"
     }
   ],
   "paths": {
