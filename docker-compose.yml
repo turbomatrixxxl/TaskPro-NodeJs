@@ -6,3 +6,5 @@ services:
     ports:
       - "5000:5000" # Map port 5000 on the host to port 5000 in the container
     restart: always # Automatically restart the container in case of errors
+    volumes:
+      - ./public/avatar:/app/public/avatar # Persistent storage for uploaded files
