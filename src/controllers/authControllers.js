@@ -232,12 +232,13 @@ exports.updateUserInfo = async (req, res, next) => {
 exports.updateUseravatar = async (req, res) => {
   try {
     const tempDir = path.join(__dirname, "../temp");
+    console.log("tempDir", tempDir);
 
     // Create the directory if it doesn't exist
     await fs.mkdir(tempDir, { recursive: true });
 
-    const avatarsDir = path.join(__dirname, "../public/avatars");
-    // console.log(avatarsDir);
+    const avatarsDir = path.join(__dirname, "/public/avatars");
+    console.log("avatarsDir", avatarsDir);
 
     // Create the directory if it doesn't exist
     await fs.mkdir(avatarsDir, { recursive: true });
@@ -246,25 +247,26 @@ exports.updateUseravatar = async (req, res) => {
       return res.status(404).json({ error: "There is no file to upload!" });
     }
 
-    // console.log(req.user.avatarURL);
+    console.log("req.user.avatarURL", req.user.avatarURL);
 
     // Generate unique filename
     const uniqFilename = `${req.user._id}-${Date.now()}${path.extname(
       req.file.originalname
     )}`;
-    // console.log(uniqFilename);
+    console.log("uniqFilename", uniqFilename);
 
     const imagePath = req.file.path;
-    // console.log(imageName);
+    console.log("imagePath", imagePath);
 
     const tempPath = path.join(tempDir, uniqFilename);
+    console.log("tempPath", tempPath);
 
     // Move file to avatars directory
     await fs.rename(imagePath, tempPath);
 
     // Resize the image
     const image = await Jimp.read(`${tempPath}`);
-    // console.log(image);
+    console.log("image", image);
 
     // Resize the image to width 250 and heigth 250.
     image.resize({ w: 68, h: 68 });
@@ -273,6 +275,7 @@ exports.updateUseravatar = async (req, res) => {
     await image.write(tempPath);
 
     const destinationPath = path.join(avatarsDir, uniqFilename);
+    console.log("destinationPath", destinationPath);
 
     // Move file to avatars directory
     await fs.rename(tempPath, destinationPath);
@@ -281,6 +284,8 @@ exports.updateUseravatar = async (req, res) => {
 
     // Update user avatar URL
     const newAvatarURL = `/avatars/${uniqFilename}`;
+    console.log("newAvatarURL", newAvatarURL);
+
     const userId = req.user._id;
 
     updateFields.avatarURL = newAvatarURL;
