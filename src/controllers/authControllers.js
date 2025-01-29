@@ -232,19 +232,19 @@ exports.updateUserInfo = async (req, res, next) => {
 exports.updateUseravatar = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(404).json({ error: "There is no file to upload!" });
+      return res.status(404).json({ error: "No file to upload!" });
     }
+    console.log("Received file:", req.file); // Add this line to log the file object
 
-    // Cloudinary automatically uploads the file, and `req.file.path` is now the Cloudinary URL
     const uploadedFile = await cloudinary.uploader.upload(req.file.path, {
-      folder: "taskpro_avatars", // Store inside a folder in Cloudinary
+      folder: "taskpro_avatars",
       width: 32,
       height: 32,
-      crop: "fill", // Ensures image is cropped and resized to exactly 32x32
-      format: "png", // Converts image to PNG
+      crop: "fill",
+      format: "png",
     });
 
-    const updateFields = { avatarURL: uploadedFile.secure_url }; // Get the Cloudinary URL
+    const updateFields = { avatarURL: uploadedFile.secure_url };
 
     const updatedUser = await updateUser(req.user._id, updateFields);
 

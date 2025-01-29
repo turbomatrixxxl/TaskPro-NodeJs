@@ -369,6 +369,9 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UserResponse"
+                },
+                "example": {
+                  "avatarUrl": "https://res.cloudinary.com/your-cloud-name/image/upload/your-file-path.png"
                 }
               }
             }
@@ -379,6 +382,9 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "message": "Invalid file type. Only images are allowed."
                 }
               }
             }
