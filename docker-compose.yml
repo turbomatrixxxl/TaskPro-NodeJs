@@ -7,6 +7,6 @@ services:
       - "7000:7000" # Map port 5000 on the host to port 5000 in the container
     restart: always # Automatically restart the container in case of errors
     volumes:
-      - ./src/public/avatars:/app/src/public/avatars # Persistent storage for uploaded files
+      - ./src/public/avatars:/usr/src/public/avatars # Persistent storage for uploaded files
     environment:
       - NODE_ENV=production
