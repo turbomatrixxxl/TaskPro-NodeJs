@@ -20,9 +20,15 @@ router.get("/users/current", authMiddleware, authController.getCurrentUser);
 
 router.patch("/users/update", authMiddleware, authController.updateUserInfo);
 
+const testUploadMiddleware = (req, res, next) => {
+  console.log("Received file:", req.file); // This will log before passing to the controller
+  next();
+};
+
 router.patch(
   "/users/avatar",
   authMiddleware,
+  testUploadMiddleware,
   upload.single("avatar"),
   authController.updateUseravatar
 );

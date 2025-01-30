@@ -231,100 +231,65 @@ exports.updateUserInfo = async (req, res, next) => {
   }
 };
 
-// exports.updateUseravatar = async (req, res) => {
-//   try {
-//     if (!req.file) {
-//       return res.status(400).json({ error: "No file uploaded!" });
-//     }
-
-//     // console.log("req.user.avatarURL:", req.user.avatarURL);
-
-//     // Create the directory if it doesn't exist
-//     await fs.mkdir(tempDir, { recursive: true });
-
-//     // Define paths
-//     const tempDir = path.join(__dirname, "../temp");
-//     const avatarsDir = path.join(__dirname, "../public/avatars");
-//     console.log("tempDir:", tempDir);
-//     console.log("avatarsDir:", avatarsDir);
-
-//     // Create the directory if it doesn't exist
-//     await fs.mkdir(tempDir, { recursive: true });
-//     await fs.mkdir(avatarsDir, { recursive: true });
-
-//     // Generate unique filename
-//     const uniqFilename = `${req.user._id}-${Date.now()}${path.extname(
-//       req.file.originalname
-//     )}`;
-//     console.log("uniqFilename:", uniqFilename);
-
-//     const imagePath = req.file.path;
-//     console.log("imagePath:", imagePath);
-
-//     const tempPath = path.join(tempDir, uniqFilename);
-
-//     // Move file to avatars directory
-//     await fs.rename(imagePath, tempPath);
-
-//     // Resize the image
-//     const image = await Jimp.read(`${tempPath}`);
-//     console.log("image:", image);
-
-//     // Resize the image to width 250 and heigth 250.
-//     image.resize({ w: 32, h: 32 });
-
-//     // Save and overwrite the image
-//     await image.write(tempPath);
-
-//     const destinationPath = path.join(avatarsDir, uniqFilename);
-
-//     // Move file to avatars directory
-//     await fs.rename(tempPath, destinationPath);
-
-//     const updateFields = {};
-
-//     // Update user avatar URL
-//     const newAvatarURL = `/avatars/${uniqFilename}`;
-//     const userId = req.user._id;
-
-//     updateFields.avatarURL = newAvatarURL;
-
-//     const updatedUser = await updateUser(userId, updateFields);
-
-//     res.status(200).json({ avatarUrl: updatedUser.avatarURL });
-//   } catch (error) {
-//     console.error("Error in uploading avatar:", error.message);
-//     res.status(500).json({
-//       status: "fail",
-//       code: 500,
-//       message: error.message,
-//       data: "Internal Server Error",
-//     });
-//   }
-// };
-
 exports.updateUseravatar = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(404).json({ error: "There is no file to upload!" });
+      return res.status(400).json({ error: "No file uploaded!" });
     }
 
-    // Log file details to verify it's being received correctly
-    console.log("Received file:", req.file);
-    console.log("file");
+    console.log("req.user.avatarURL:", req.user.avatarURL);
 
-    // Cloudinary automatically uploads the file, and `req.file.path` is now the Cloudinary URL
-    const uploadedFile = await cloudinary.uploader.upload(req.file.path, {
-      folder: "taskpro_avatars", // Store inside a folder in Cloudinary
-      width: 32,
-      height: 32,
-      crop: "fill", // Ensures image is cropped and resized to exactly 32x32
-      format: "png", // Converts image to PNG
-    });
+    // Create the directory if it doesn't exist
+    await fs.mkdir(tempDir, { recursive: true });
 
-    const updateFields = { avatarURL: uploadedFile.secure_url }; // Get the Cloudinary URL
+    // Define paths
+    const tempDir = path.join(__dirname, "../temp");
+    const avatarsDir = path.join(__dirname, "../public/avatars");
+    console.log("tempDir:", tempDir);
+    console.log("avatarsDir:", avatarsDir);
 
-    const updatedUser = await updateUser(req.user._id, updateFields);
+    // Create the directory if it doesn't exist
+    await fs.mkdir(tempDir, { recursive: true });
+    await fs.mkdir(avatarsDir, { recursive: true });
+
+    // Generate unique filename
+    const uniqFilename = `${req.user._id}-${Date.now()}${path.extname(
+      req.file.originalname
+    )}`;
+    console.log("uniqFilename:", uniqFilename);
+
+    const imagePath = req.file.path;
+    console.log("imagePath:", imagePath);
+
+    const tempPath = path.join(tempDir, uniqFilename);
+
+    // Move file to avatars directory
+    await fs.rename(imagePath, tempPath);
+
+    // Resize the image
+    const image = await Jimp.read(`${tempPath}`);
+    console.log("image:", image);
+
+    // Resize the image to width 250 and heigth 250.
+    image.resize({ w: 32, h: 32 });
+
+    // Save and overwrite the image
+    await image.write(tempPath);
+
+    const destinationPath = path.join(avatarsDir, uniqFilename);
+
+    // Move file to avatars directory
+    await fs.rename(tempPath, destinationPath);
+
+    const updateFields = {};
+
+    // Update user avatar URL
+    const newAvatarURL = `/avatars/${uniqFilename}`;
+    const userId = req.user._id;
+
+    updateFields.avatarURL = newAvatarURL;
+
+    const updatedUser = await updateUser(userId, updateFields);
 
     res.status(200).json({ avatarUrl: updatedUser.avatarURL });
   } catch (error) {
@@ -337,3 +302,45 @@ exports.updateUseravatar = async (req, res) => {
     });
   }
 };
+
+// exports.updateUseravatar = async (req, res) => {
+//   try {
+//     if (!req.file) {
+//       return res.status(404).json({ error: "There is no file to upload!" });
+//     }
+
+//     // Log file details to verify it's being received correctly
+//     console.log("Received file:", req.file);
+
+//     // Upload to Cloudinary
+//     const uploadedFile = await cloudinary.uploader.upload(req.file.path, {
+//       folder: "taskpro_avatars", // Store inside a folder in Cloudinary
+//       width: 32,
+//       height: 32,
+//       crop: "fill", // Crop image to exactly 32x32
+//       format: "png", // Convert image to PNG format
+//     });
+
+//     // Update fields with Cloudinary URL
+//     const updateFields = { avatarURL: uploadedFile.secure_url };
+
+//     // Update user in the database
+//     const updatedUser = await updateUser(req.user._id, updateFields, {
+//       new: true,
+//     });
+
+//     // Send success response
+//     res.status(200).json({
+//       avatarUrl: updatedUser.avatarURL,
+//       message: "Avatar updated successfully!",
+//     });
+//   } catch (error) {
+//     console.error("Error in uploading avatar:", error.message);
+//     res.status(500).json({
+//       status: "fail",
+//       code: 500,
+//       message: error.message,
+//       data: "Internal Server Error",
+//     });
+//   }
+// };
