@@ -22,7 +22,7 @@ const Joi = require("joi");
 
 const bcrypt = require("bcryptjs");
 
-const uploadToImgur = require("../utils/uploadToImgur"); // Move the function to a utility file
+const { uploadToImgur } = require("../utils/imgur"); // Move the function to a utility file
 
 // const cloudinary = require("../config/cloudinary");
 
