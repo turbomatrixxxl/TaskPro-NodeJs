@@ -15,7 +15,8 @@ const { extractUserId } = require("../middlewares/extractUserId");
 const fs = require("fs").promises;
 const path = require("path");
 
-// const { Jimp } = require("jimp");
+const { Jimp } = require("jimp");
+// reactivated jimp import
 
 const Joi = require("joi");
 
