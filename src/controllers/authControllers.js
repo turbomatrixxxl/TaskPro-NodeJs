@@ -22,6 +22,8 @@ const Joi = require("joi");
 
 const bcrypt = require("bcryptjs");
 
+const uploadToImgur = require("../utils/uploadToImgur"); // Move the function to a utility file
+
 // const cloudinary = require("../config/cloudinary");
 
 exports.register = async (req, res, next) => {
@@ -232,74 +234,73 @@ exports.updateUserInfo = async (req, res, next) => {
   }
 };
 
-exports.updateUseravatar = async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: "No file uploaded!" });
-    }
+// exports.updateUseravatar = async (req, res) => {
+//   try {
+//     if (!req.file) {
+//       return res.status(400).json({ error: "No file uploaded!" });
+//     }
 
-    console.log("req.user.avatarURL:", req.user.avatarURL);
+//     console.log("req.user.avatarURL:", req.user.avatarURL);
 
-    // Define paths
-    const tempDir = path.join(__dirname, "../temp");
-    const avatarsDir = path.join(__dirname, "../public/avatars");
-    console.log("tempDir:", tempDir);
-    console.log("avatarsDir:", avatarsDir);
+//     // Define paths
+//     const tempDir = path.join(__dirname, "../temp");
+//     const avatarsDir = path.join(__dirname, "../../public/avatars");
 
-    // Create the directories if they don't exist
-    await fs.mkdir(tempDir, { recursive: true });
-    await fs.mkdir(avatarsDir, { recursive: true });
+//     console.log("avatarsDir:", avatarsDir);
 
-    // Generate unique filename
-    const uniqFilename = `${req.user._id}-${Date.now()}${path.extname(
-      req.file.originalname
-    )}`;
-    console.log("uniqFilename:", uniqFilename);
+//     // Create the directories if they don't exist
+//     await fs.mkdir(tempDir, { recursive: true });
+//     await fs.mkdir(avatarsDir, { recursive: true });
 
-    const imagePath = req.file.path;
-    console.log("imagePath:", imagePath);
+//     // Generate unique filename
+//     const uniqFilename = `${req.user._id}-${Date.now()}${path.extname(
+//       req.file.originalname
+//     )}`;
+//     console.log("uniqFilename:", uniqFilename);
 
-    const tempPath = path.join(tempDir, uniqFilename);
+//     const imagePath = req.file.path;
+//     console.log("imagePath:", imagePath);
 
-    // Move file to avatars directory
-    await fs.rename(imagePath, tempPath);
+//     const tempPath = path.join(tempDir, uniqFilename);
 
-    // Resize the image
-    const image = await Jimp.read(tempPath);
-    console.log("image:", image);
+//     // Move file to avatars directory
+//     await fs.rename(imagePath, tempPath);
 
-    // Resize the image to width 32 and height 32.
-    image.resize({ w: 32, h: 32 });
+//     // Resize the image
+//     const image = await Jimp.read(tempPath);
+//     console.log("image:", image);
 
-    // Save and overwrite the image
-    await image.write(tempPath);
+//     // Resize the image to width 32 and height 32.
+//     image.resize({ w: 32, h: 32 });
 
-    const destinationPath = path.join(avatarsDir, uniqFilename);
+//     // Save and overwrite the image
+//     await image.write(tempPath);
 
-    // Move file to avatars directory
-    await fs.rename(tempPath, destinationPath);
+//     const destinationPath = path.join(avatarsDir, uniqFilename);
 
-    const updateFields = {};
+//     // Move file to avatars directory
+//     await fs.rename(tempPath, destinationPath);
 
-    // Update user avatar URL
-    const newAvatarURL = `/avatars/${uniqFilename}`;
-    const userId = req.user._id;
+//     const updateFields = {};
 
-    updateFields.avatarURL = newAvatarURL;
+//     // Update user avatar URL
+//     const newAvatarURL = `/public/avatars/${uniqFilename}`;
 
-    const updatedUser = await updateUser(userId, updateFields);
+//     updateFields.avatarURL = newAvatarURL;
 
-    res.status(200).json({ avatarUrl: updatedUser.avatarURL });
-  } catch (error) {
-    console.error("Error in uploading avatar:", error.message);
-    res.status(500).json({
-      status: "fail",
-      code: 500,
-      message: error.message,
-      data: "Internal Server Error",
-    });
-  }
-};
+//     const updatedUser = await updateUser(userId, updateFields);
+
+//     res.status(200).json({ avatarUrl: updatedUser.avatarURL });
+//   } catch (error) {
+//     console.error("Error in uploading avatar:", error.message);
+//     res.status(500).json({
+//       status: "fail",
+//       code: 500,
+//       message: error.message,
+//       data: "Internal Server Error",
+//     });
+//   }
+// };
 
 // exports.updateUseravatar = async (req, res) => {
 //   try {
@@ -342,3 +343,25 @@ exports.updateUseravatar = async (req, res) => {
 //     });
 //   }
 // };
+
+exports.updateUseravatar = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded!" });
+    }
+
+    const imagePath = req.file.path;
+    const imgurUrl = await uploadToImgur(imagePath);
+
+    // Remove the local temp file
+    await fs.unlink(imagePath);
+
+    // Update the user's avatar URL in the database
+    const updatedUser = await updateUser(req.user._id, { avatarURL: imgurUrl });
+
+    res.status(200).json({ avatarUrl: updatedUser.avatarURL });
+  } catch (error) {
+    console.error("Error updating avatar:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
