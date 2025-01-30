@@ -15,11 +15,13 @@ const { extractUserId } = require("../middlewares/extractUserId");
 const fs = require("fs").promises;
 const path = require("path");
 
-const { Jimp } = require("jimp");
+// const { Jimp } = require("jimp");
 
 const Joi = require("joi");
 
 const bcrypt = require("bcryptjs");
+
+const cloudinary = require("../config/cloudinary");
 
 exports.register = async (req, res, next) => {
   const { username, email, password } = req.body;
@@ -229,65 +231,96 @@ exports.updateUserInfo = async (req, res, next) => {
   }
 };
 
+// exports.updateUseravatar = async (req, res) => {
+//   try {
+//     if (!req.file) {
+//       return res.status(400).json({ error: "No file uploaded!" });
+//     }
+
+//     // console.log("req.user.avatarURL:", req.user.avatarURL);
+
+//     // Create the directory if it doesn't exist
+//     await fs.mkdir(tempDir, { recursive: true });
+
+//     // Define paths
+//     const tempDir = path.join(__dirname, "../temp");
+//     const avatarsDir = path.join(__dirname, "../public/avatars");
+//     console.log("tempDir:", tempDir);
+//     console.log("avatarsDir:", avatarsDir);
+
+//     // Create the directory if it doesn't exist
+//     await fs.mkdir(tempDir, { recursive: true });
+//     await fs.mkdir(avatarsDir, { recursive: true });
+
+//     // Generate unique filename
+//     const uniqFilename = `${req.user._id}-${Date.now()}${path.extname(
+//       req.file.originalname
+//     )}`;
+//     console.log("uniqFilename:", uniqFilename);
+
+//     const imagePath = req.file.path;
+//     console.log("imagePath:", imagePath);
+
+//     const tempPath = path.join(tempDir, uniqFilename);
+
+//     // Move file to avatars directory
+//     await fs.rename(imagePath, tempPath);
+
+//     // Resize the image
+//     const image = await Jimp.read(`${tempPath}`);
+//     console.log("image:", image);
+
+//     // Resize the image to width 250 and heigth 250.
+//     image.resize({ w: 32, h: 32 });
+
+//     // Save and overwrite the image
+//     await image.write(tempPath);
+
+//     const destinationPath = path.join(avatarsDir, uniqFilename);
+
+//     // Move file to avatars directory
+//     await fs.rename(tempPath, destinationPath);
+
+//     const updateFields = {};
+
+//     // Update user avatar URL
+//     const newAvatarURL = `/avatars/${uniqFilename}`;
+//     const userId = req.user._id;
+
+//     updateFields.avatarURL = newAvatarURL;
+
+//     const updatedUser = await updateUser(userId, updateFields);
+
+//     res.status(200).json({ avatarUrl: updatedUser.avatarURL });
+//   } catch (error) {
+//     console.error("Error in uploading avatar:", error.message);
+//     res.status(500).json({
+//       status: "fail",
+//       code: 500,
+//       message: error.message,
+//       data: "Internal Server Error",
+//     });
+//   }
+// };
+
 exports.updateUseravatar = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: "No file uploaded!" });
+      return res.status(404).json({ error: "There is no file to upload!" });
     }
 
-    // console.log("req.user.avatarURL:", req.user.avatarURL);
+    // Cloudinary automatically uploads the file, and `req.file.path` is now the Cloudinary URL
+    const uploadedFile = await cloudinary.uploader.upload(req.file.path, {
+      folder: "taskpro_avatars", // Store inside a folder in Cloudinary
+      width: 32,
+      height: 32,
+      crop: "fill", // Ensures image is cropped and resized to exactly 32x32
+      format: "png", // Converts image to PNG
+    });
 
-    // Create the directory if it doesn't exist
-    await fs.mkdir(tempDir, { recursive: true });
+    const updateFields = { avatarURL: uploadedFile.secure_url }; // Get the Cloudinary URL
 
-    // Define paths
-    const tempDir = path.join(__dirname, "../temp");
-    const avatarsDir = path.join(__dirname, "../public/avatars");
-    console.log("tempDir:", tempDir);
-    console.log("avatarsDir:", avatarsDir);
-
-    // Create the directory if it doesn't exist
-    await fs.mkdir(tempDir, { recursive: true });
-    await fs.mkdir(avatarsDir, { recursive: true });
-
-    // Generate unique filename
-    const uniqFilename = `${req.user._id}-${Date.now()}${path.extname(
-      req.file.originalname
-    )}`;
-    console.log("uniqFilename:", uniqFilename);
-
-    const imagePath = req.file.path;
-    console.log("imagePath:", imagePath);
-
-    const tempPath = path.join(tempDir, uniqFilename);
-
-    // Move file to avatars directory
-    await fs.rename(imagePath, tempPath);
-
-    // Resize the image
-    const image = await Jimp.read(`${tempPath}`);
-    console.log("image:", image);
-
-    // Resize the image to width 250 and heigth 250.
-    image.resize({ w: 32, h: 32 });
-
-    // Save and overwrite the image
-    await image.write(tempPath);
-
-    const destinationPath = path.join(avatarsDir, uniqFilename);
-
-    // Move file to avatars directory
-    await fs.rename(tempPath, destinationPath);
-
-    const updateFields = {};
-
-    // Update user avatar URL
-    const newAvatarURL = `/avatars/${uniqFilename}`;
-    const userId = req.user._id;
-
-    updateFields.avatarURL = newAvatarURL;
-
-    const updatedUser = await updateUser(userId, updateFields);
+    const updatedUser = await updateUser(req.user._id, updateFields);
 
     res.status(200).json({ avatarUrl: updatedUser.avatarURL });
   } catch (error) {
@@ -300,51 +333,3 @@ exports.updateUseravatar = async (req, res) => {
     });
   }
 };
-
-// exports.updateUserAvatar = async (req, res) => {
-//   try {
-//     if (!req.file) {
-//       return res.status(400).json({ error: "No file uploaded!" });
-//     }
-
-//     // Define paths
-//     const tempDir = path.join(__dirname, "../temp");
-//     const avatarsDir = path.join(__dirname, "../public/avatars");
-
-//     // Ensure directories exist
-//     await fs.mkdir(tempDir, { recursive: true });
-//     await fs.mkdir(avatarsDir, { recursive: true });
-
-//     // Generate a unique filename
-//     const uniqFilename = `${req.user._id}-${Date.now()}${path.extname(
-//       req.file.originalname
-//     )}`;
-
-//     const tempPath = path.join(tempDir, uniqFilename);
-//     const destinationPath = path.join(avatarsDir, uniqFilename);
-
-//     // Move uploaded file to temp directory
-//     await fs.rename(req.file.path, tempPath);
-
-//     // Resize the image
-//     const image = await Jimp.read(tempPath);
-//     await image.resize(68, 68).writeAsync(destinationPath);
-
-//     // Remove the temporary file
-//     await fs.unlink(tempPath);
-
-//     // Update user avatar URL
-//     const newAvatarURL = `/avatars/${uniqFilename}`;
-//     const updatedUser = await updateUser(req.user._id, {
-//       avatarURL: newAvatarURL,
-//     });
-
-//     return res.status(200).json({ avatarUrl: updatedUser.avatarURL });
-//   } catch (error) {
-//     console.error("Error uploading avatar:", error);
-//     return res.status(500).json({
-//       status: "fail",
-//       message: error.message,
-//     });
-//   }
-// };
