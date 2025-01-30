@@ -239,16 +239,13 @@ exports.updateUseravatar = async (req, res) => {
 
     console.log("req.user.avatarURL:", req.user.avatarURL);
 
-    // Create the directory if it doesn't exist
-    await fs.mkdir(tempDir, { recursive: true });
-
     // Define paths
     const tempDir = path.join(__dirname, "../temp");
     const avatarsDir = path.join(__dirname, "../public/avatars");
     console.log("tempDir:", tempDir);
     console.log("avatarsDir:", avatarsDir);
 
-    // Create the directory if it doesn't exist
+    // Create the directories if they don't exist
     await fs.mkdir(tempDir, { recursive: true });
     await fs.mkdir(avatarsDir, { recursive: true });
 
@@ -267,10 +264,10 @@ exports.updateUseravatar = async (req, res) => {
     await fs.rename(imagePath, tempPath);
 
     // Resize the image
-    const image = await Jimp.read(`${tempPath}`);
+    const image = await Jimp.read(tempPath);
     console.log("image:", image);
 
-    // Resize the image to width 250 and heigth 250.
+    // Resize the image to width 32 and height 32.
     image.resize({ w: 32, h: 32 });
 
     // Save and overwrite the image
