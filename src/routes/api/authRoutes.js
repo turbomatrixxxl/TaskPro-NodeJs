@@ -21,7 +21,11 @@ router.get("/users/current", authMiddleware, authController.getCurrentUser);
 router.patch("/users/update", authMiddleware, authController.updateUserInfo);
 
 const testUploadMiddleware = (req, res, next) => {
-  console.log("Received file:", req.file); // This will log before passing to the controller
+  if (req.file) {
+    console.log("Received file in multer:", req.file); // This will log Multer's processed file
+  } else {
+    console.log("No file received by Multer.");
+  }
   next();
 };
 
