@@ -21,7 +21,7 @@ const Joi = require("joi");
 
 const bcrypt = require("bcryptjs");
 
-const cloudinary = require("../config/cloudinary");
+// const cloudinary = require("../config/cloudinary");
 
 exports.register = async (req, res, next) => {
   const { username, email, password } = req.body;
