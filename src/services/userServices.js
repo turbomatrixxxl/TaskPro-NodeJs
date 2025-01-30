@@ -29,7 +29,10 @@ const addColumn = async (userId, projectName, columnName) => {
   const user = await User.findById(userId);
   if (!user) throw new Error("User not found");
 
-  const project = user.projects.find((project) => project.name === projectName);
+  const project = user.projects.find(
+    (project) =>
+      project.name.trim().toLowerCase() === projectName.trim().toLowerCase()
+  );
   if (!project) throw new Error("Project not found");
 
   project.columns.push({ name: columnName, cards: [] });
@@ -43,10 +46,16 @@ const updateColumn = async (userId, projectName, columnName, update) => {
   const user = await User.findById(userId);
   if (!user) throw new Error("User not found");
 
-  const project = user.projects.find((project) => project.name === projectName);
+  const project = user.projects.find(
+    (project) =>
+      project.name.trim().toLowerCase() === projectName.trim().toLowerCase()
+  );
   if (!project) throw new Error("Project not found");
 
-  const column = project.columns.find((column) => column.name === columnName);
+  const column = project.columns.find(
+    (column) =>
+      column.name.trim().toLowerCase() === columnName.trim().toLowerCase()
+  );
   if (!column) {
     throw new Error("Column not found");
   } else {
@@ -62,10 +71,16 @@ const addTask = async (userId, projectName, columnName, taskData) => {
   const user = await User.findById(userId);
   if (!user) throw new Error("User not found");
 
-  const project = user.projects.find((project) => project.name === projectName);
+  const project = user.projects.find(
+    (project) =>
+      project.name.trim().toLowerCase() === projectName.trim().toLowerCase()
+  );
   if (!project) throw new Error("Project not found");
 
-  const column = project.columns.find((column) => column.name === columnName);
+  const column = project.columns.find(
+    (column) =>
+      column.name.trim().toLowerCase() === columnName.trim().toLowerCase()
+  );
   if (!column) throw new Error("Column not found");
 
   // Ensure taskData has all required fields
@@ -98,18 +113,25 @@ const updateTask = async (
 
     // Find the specific project, column, and task
     const project = user.projects.find(
-      (project) => project.name === projectName
+      (project) =>
+        project.name.trim().toLowerCase() === projectName.trim().toLowerCase()
     );
     if (!project) {
       throw new Error("Project not found");
     }
 
-    const column = project.columns.find((column) => column.name === columnName);
+    const column = project.columns.find(
+      (column) =>
+        column.name.trim().toLowerCase() === columnName.trim().toLowerCase()
+    );
     if (!column) {
       throw new Error("Column not found");
     }
 
-    const task = column.cards.find((card) => card.title === taskName);
+    const task = column.cards.find(
+      (card) =>
+        card.title.trim().toLowerCase() === taskName.trim().toLowerCase()
+    );
     if (!task) {
       throw new Error("Task not found");
     } else {
@@ -147,14 +169,18 @@ const moveTask = async (
   if (!user) throw new Error("User not found");
 
   // Find the specific project
-  const project = user.projects.find((project) => project.name === projectName);
+  const project = user.projects.find(
+    (project) =>
+      project.name.trim().toLowerCase() === projectName.trim().toLowerCase()
+  );
   if (!project) {
     throw new Error("Project not found");
   }
 
   // Find the source column
   const fromColumn = project.columns.find(
-    (column) => column.name === columnName
+    (column) =>
+      column.name.trim().toLowerCase() === columnName.trim().toLowerCase()
   );
   if (!fromColumn) {
     throw new Error("Source column not found");
@@ -162,7 +188,7 @@ const moveTask = async (
 
   // Find the task in the source column
   const taskIndex = fromColumn.cards.findIndex(
-    (card) => card.title === taskName
+    (card) => card.title.trim().toLowerCase() === taskName.trim().toLowerCase()
   );
   if (taskIndex === -1) throw new Error("Task not found");
 
@@ -171,7 +197,8 @@ const moveTask = async (
 
   // Find the target column
   const toColumn = project.columns.find(
-    (column) => column.name === toColumnName
+    (column) =>
+      column.name.trim().toLowerCase() === toColumnName.trim().toLowerCase()
   );
   if (!toColumn) throw new Error("Target column not found");
 
@@ -189,18 +216,26 @@ const deleteTask = async (userId, projectName, columnName, taskName) => {
   if (!user) throw new Error("User not found");
 
   // Find the specific project, column, and task
-  const project = user.projects.find((project) => project.name === projectName);
+  const project = user.projects.find(
+    (project) =>
+      project.name.trim().toLowerCase() === projectName.trim().toLowerCase()
+  );
   if (!project) {
     throw new Error("Project not found");
   }
 
-  const column = project.columns.find((column) => column.name === columnName);
+  const column = project.columns.find(
+    (column) =>
+      column.name.trim().toLowerCase() === columnName.trim().toLowerCase()
+  );
   if (!column) {
     throw new Error("Column not found");
   }
 
   // Find the task in the source column
-  const taskIndex = column.cards.findIndex((card) => card.title === taskName);
+  const taskIndex = column.cards.findIndex(
+    (card) => card.title.trim().toLowerCase() === taskName.trim().toLowerCase()
+  );
   if (taskIndex === -1) throw new Error("Task not found");
 
   column.cards.splice(taskIndex, 1);
@@ -215,14 +250,18 @@ const deleteColumn = async (userId, projectName, columnName) => {
   if (!user) throw new Error("User not found");
 
   // Find the specific project
-  const project = user.projects.find((project) => project.name === projectName);
+  const project = user.projects.find(
+    (project) =>
+      project.name.trim().toLowerCase() === projectName.trim().toLowerCase()
+  );
   if (!project) {
     throw new Error("Project not found");
   }
 
   // Find the column in the source project
   const columnIndex = project.columns.findIndex(
-    (column) => column.name === columnName
+    (column) =>
+      column.name.trim().toLowerCase() === columnName.trim().toLowerCase()
   );
   if (columnIndex === -1) throw new Error("Column not found");
 
@@ -239,7 +278,8 @@ const deleteProject = async (userId, projectName) => {
 
   // Find the column in the source project
   const projectIndex = user.projects.findIndex(
-    (project) => project.name === projectName
+    (project) =>
+      project.name.trim().toLowerCase() === projectName.trim().toLowerCase()
   );
   if (projectIndex === -1) throw new Error("Project not found");
 
@@ -254,7 +294,10 @@ const updateProjectAppearance = async (userId, projectName, updates) => {
   const user = await User.findOne({ _id: userId });
   if (!user) throw new Error("User not found");
 
-  const project = user.projects.find((project) => project.name === projectName);
+  const project = user.projects.find(
+    (project) =>
+      project.name.trim().toLowerCase() === projectName.trim().toLowerCase()
+  );
 
   if (!project) {
     throw new Error("Project not found");
