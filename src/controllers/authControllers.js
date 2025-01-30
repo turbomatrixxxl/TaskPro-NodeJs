@@ -346,6 +346,8 @@ exports.updateUserInfo = async (req, res, next) => {
 
 exports.updateUseravatar = async (req, res) => {
   try {
+    console.log("File path from Multer:", req.file?.path); // Ensure Multer processes the file
+
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded!" });
     }

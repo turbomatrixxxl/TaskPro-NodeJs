@@ -33,6 +33,11 @@ router.patch(
   "/users/avatar",
   authMiddleware,
   testUploadMiddleware,
+  (req, res, next) => {
+    console.log("Request received:", req.headers);
+    console.log("File data:", req.file); // Should log 'undefined' if Multer isn't processing the file
+    next();
+  },
   upload.single("avatar"),
   authController.updateUseravatar
 );
