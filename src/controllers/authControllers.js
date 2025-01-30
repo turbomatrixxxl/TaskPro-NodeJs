@@ -309,6 +309,10 @@ exports.updateUseravatar = async (req, res) => {
       return res.status(404).json({ error: "There is no file to upload!" });
     }
 
+    // Log file details to verify it's being received correctly
+    console.log("Received file:", req.file);
+    console.log("file");
+
     // Cloudinary automatically uploads the file, and `req.file.path` is now the Cloudinary URL
     const uploadedFile = await cloudinary.uploader.upload(req.file.path, {
       folder: "taskpro_avatars", // Store inside a folder in Cloudinary
