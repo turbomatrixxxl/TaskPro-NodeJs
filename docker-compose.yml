@@ -1,8 +1,12 @@
+version: "3.8"
+
 services:
   backend:
-    build: . # This tells Docker Compose to build the image from the Dockerfile in the current directory
+    build: . # Build the image from the Dockerfile in the current directory
     ports:
-      - "5000:5000" # Map port 5000 on the host to port 5000 in the container
+      - "7000:7000" # Map port 5000 on the host to port 5000 in the container
     restart: always # Automatically restart the container in case of errors
     volumes:
-      - ./src/public/avatars:./app/src/public/avatars # Persistent storage for uploaded files
+      - ./src/public/avatars:/app/src/public/avatars # Persistent storage for uploaded files
+    environment:
+      - NODE_ENV=production

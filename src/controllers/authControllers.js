@@ -231,22 +231,24 @@ exports.updateUserInfo = async (req, res, next) => {
 
 exports.updateUseravatar = async (req, res) => {
   try {
-    const tempDir = path.join(__dirname, "../temp");
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded!" });
+    }
+
+    // console.log("req.user.avatarURL:", req.user.avatarURL);
 
     // Create the directory if it doesn't exist
     await fs.mkdir(tempDir, { recursive: true });
 
+    // Define paths
+    const tempDir = path.join(__dirname, "../temp");
     const avatarsDir = path.join(__dirname, "../public/avatars");
+    console.log("tempDir:", tempDir);
     console.log("avatarsDir:", avatarsDir);
 
     // Create the directory if it doesn't exist
+    await fs.mkdir(tempDir, { recursive: true });
     await fs.mkdir(avatarsDir, { recursive: true });
-
-    if (!req.file) {
-      return res.status(404).json({ error: "There is no file to upload!" });
-    }
-
-    console.log("req.user.avatarURL:", req.user.avatarURL);
 
     // Generate unique filename
     const uniqFilename = `${req.user._id}-${Date.now()}${path.extname(
@@ -267,7 +269,7 @@ exports.updateUseravatar = async (req, res) => {
     console.log("image:", image);
 
     // Resize the image to width 250 and heigth 250.
-    image.resize({ w: 68, h: 68 });
+    image.resize({ w: 32, h: 32 });
 
     // Save and overwrite the image
     await image.write(tempPath);
@@ -298,3 +300,51 @@ exports.updateUseravatar = async (req, res) => {
     });
   }
 };
+
+// exports.updateUserAvatar = async (req, res) => {
+//   try {
+//     if (!req.file) {
+//       return res.status(400).json({ error: "No file uploaded!" });
+//     }
+
+//     // Define paths
+//     const tempDir = path.join(__dirname, "../temp");
+//     const avatarsDir = path.join(__dirname, "../public/avatars");
+
+//     // Ensure directories exist
+//     await fs.mkdir(tempDir, { recursive: true });
+//     await fs.mkdir(avatarsDir, { recursive: true });
+
+//     // Generate a unique filename
+//     const uniqFilename = `${req.user._id}-${Date.now()}${path.extname(
+//       req.file.originalname
+//     )}`;
+
+//     const tempPath = path.join(tempDir, uniqFilename);
+//     const destinationPath = path.join(avatarsDir, uniqFilename);
+
+//     // Move uploaded file to temp directory
+//     await fs.rename(req.file.path, tempPath);
+
+//     // Resize the image
+//     const image = await Jimp.read(tempPath);
+//     await image.resize(68, 68).writeAsync(destinationPath);
+
+//     // Remove the temporary file
+//     await fs.unlink(tempPath);
+
+//     // Update user avatar URL
+//     const newAvatarURL = `/avatars/${uniqFilename}`;
+//     const updatedUser = await updateUser(req.user._id, {
+//       avatarURL: newAvatarURL,
+//     });
+
+//     return res.status(200).json({ avatarUrl: updatedUser.avatarURL });
+//   } catch (error) {
+//     console.error("Error uploading avatar:", error);
+//     return res.status(500).json({
+//       status: "fail",
+//       message: error.message,
+//     });
+//   }
+// };

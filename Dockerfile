@@ -15,7 +15,7 @@ RUN npm install
 COPY . .
 
 # Definim portul pe care in expunem port 5000
-EXPOSE 5000
+EXPOSE 7000
 
 # Comanda pentru a rula aplicatia 
 CMD ["npm", "start"]
