@@ -16,43 +16,31 @@ async function uploadToImgur(imagePath) {
       },
     });
 
-    return response.data.data.link; // Return the image URL
+    // Check if the upload was successful
+    if (response.data.success) {
+      console.log("Image uploaded successfully:", response.data.data.link);
+      return response.data.data.link; // Return the image URL
+    } else {
+      throw new Error(
+        "Imgur upload failed with response: " + JSON.stringify(response.data)
+      );
+    }
   } catch (error) {
+    // Enhanced error logging
     console.error(
       "Error uploading to Imgur:",
       error.response ? error.response.data : error.message
     );
-    throw error;
+    throw new Error(
+      "Failed to upload image to Imgur. Please check the server logs."
+    );
+  } finally {
+    // Clean up the temporary file if it exists
+    if (fs.existsSync(imagePath)) {
+      fs.unlinkSync(imagePath);
+      console.log("Temporary image file deleted:", imagePath);
+    }
   }
 }
-
-// const axios = require("axios");
-// const FormData = require("form-data");
-
-// const uploadToImgur = async (fileBuffer) => {
-//   try {
-//     const formData = new FormData();
-//     formData.append("image", fileBuffer, { filename: "upload.jpg" });
-
-//     const response = await axios.post(
-//       "https://api.imgur.com/3/image",
-//       formData,
-//       {
-//         headers: {
-//           Authorization: `592e06e7481945a`, // Replace with your Imgur Client ID
-//           ...formData.getHeaders(), // Important for handling multipart/form-data
-//         },
-//       }
-//     );
-
-//     return response.data.data.link; // Return the Imgur URL
-//   } catch (error) {
-//     console.error(
-//       "Error uploading to Imgur:",
-//       error.response?.data || error.message
-//     );
-//     throw new Error("Failed to upload image to Imgur");
-//   }
-// };
 
 module.exports = { uploadToImgur };

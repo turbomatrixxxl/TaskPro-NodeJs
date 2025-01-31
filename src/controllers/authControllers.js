@@ -344,6 +344,7 @@ exports.updateUserInfo = async (req, res, next) => {
 //   }
 // };
 
+// In your controller
 exports.updateUseravatar = async (req, res) => {
   try {
     console.log("File path from Multer:", req.file?.path); // Ensure Multer processes the file
@@ -355,8 +356,12 @@ exports.updateUseravatar = async (req, res) => {
     const imagePath = req.file.path;
     const imgurUrl = await uploadToImgur(imagePath);
 
-    // Remove the local temp file
-    await fs.unlink(imagePath);
+    // Only delete the file if it exists
+    const fs = require("fs");
+    if (fs.existsSync(imagePath)) {
+      fs.unlinkSync(imagePath);
+      console.log("Temporary image file deleted:", imagePath);
+    }
 
     // Update the user's avatar URL in the database
     const updatedUser = await updateUser(req.user._id, { avatarURL: imgurUrl });
@@ -364,7 +369,9 @@ exports.updateUseravatar = async (req, res) => {
     res.status(200).json({ avatarUrl: updatedUser.avatarURL });
   } catch (error) {
     console.error("Error updating avatar:", error.message);
-    res.status(500).json({ error: "Internal Server Error" });
+    res
+      .status(500)
+      .json({ error: "Internal Server Error", errorMessage: error.message });
   }
 };
 
