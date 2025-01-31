@@ -344,54 +344,75 @@ exports.updateUserInfo = async (req, res, next) => {
 //   }
 // };
 
-// In your controller
+// exports.updateUseravatar = async (req, res) => {
+//   try {
+//     console.log("File path from Multer:", req.file?.path); // Ensure Multer processes the file
+
+//     if (!req.file) {
+//       return res.status(400).json({ error: "No file uploaded!" });
+//     }
+
+//     const imagePath = req.file.path;
+//     const imgurUrl = await uploadToImgur(imagePath);
+
+//     // Only delete the file if it exists
+//     const fs = require("fs");
+//     if (fs.existsSync(imagePath)) {
+//       fs.unlinkSync(imagePath);
+//       console.log("Temporary image file deleted:", imagePath);
+//     }
+
+//     // Update the user's avatar URL in the database
+//     const updatedUser = await updateUser(req.user._id, { avatarURL: imgurUrl });
+
+//     res.status(200).json({ avatarUrl: updatedUser.avatarURL });
+//   } catch (error) {
+//     console.error("Error updating avatar:", error.message);
+//     res
+//       .status(500)
+//       .json({ error: "Internal Server Error", errorMessage: error.message });
+//   }
+// };
+
 exports.updateUseravatar = async (req, res) => {
   try {
     console.log("File path from Multer:", req.file?.path); // Ensure Multer processes the file
 
+    // Check if the file was uploaded by Multer
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded!" });
     }
 
     const imagePath = req.file.path;
+
+    // Upload the image to Imgur and retrieve the URL
     const imgurUrl = await uploadToImgur(imagePath);
+    if (!imgurUrl) {
+      return res.status(500).json({ error: "Failed to upload to Imgur" });
+    }
 
     // Only delete the file if it exists
-    const fs = require("fs");
     if (fs.existsSync(imagePath)) {
-      fs.unlinkSync(imagePath);
+      fs.unlinkSync(imagePath); // Delete the temporary file after upload
       console.log("Temporary image file deleted:", imagePath);
     }
 
     // Update the user's avatar URL in the database
     const updatedUser = await updateUser(req.user._id, { avatarURL: imgurUrl });
 
+    if (!updatedUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Respond with the updated avatar URL
     res.status(200).json({ avatarUrl: updatedUser.avatarURL });
   } catch (error) {
     console.error("Error updating avatar:", error.message);
-    res
-      .status(500)
-      .json({ error: "Internal Server Error", errorMessage: error.message });
+    // Provide a clear error message to the frontend
+    res.status(500).json({
+      error: "Internal Server Error",
+      errorMessage:
+        error.message || "An error occurred while updating the avatar",
+    });
   }
 };
-
-// exports.updateUseravatar = async (req, res) => {
-//   try {
-//     if (!req.file) {
-//       return res.status(400).json({ error: "No file uploaded!" });
-//     }
-
-//     console.log("Received file buffer:", req.file.buffer);
-
-//     // Upload image buffer directly to Imgur
-//     const imgurUrl = await uploadToImgur(req.file.buffer);
-
-//     // Update user avatar in the database
-//     const updatedUser = await updateUser(req.user._id, { avatarURL: imgurUrl });
-
-//     res.status(200).json({ avatarUrl: updatedUser.avatarURL });
-//   } catch (error) {
-//     console.error("Error updating avatar:", error.message);
-//     res.status(500).json({ error: "Internal Server Error" });
-//   }
-// };
