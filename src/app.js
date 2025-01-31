@@ -36,6 +36,13 @@ app.use(express.json());
 
 app.use(express.static(path.join(__dirname, "public")));
 
+app.use((req, res, next) => {
+  console.log(`📩 Incoming Request: ${req.method} ${req.url}`);
+  console.log(`🔑 Headers:`, req.headers);
+  console.log(`📦 Body:`, req.body);
+  next();
+});
+
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use("/api", usersRouter);

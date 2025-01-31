@@ -341,9 +341,13 @@
     "/api/users/avatar": {
       "patch": {
         "summary": "Update user avatar",
-        "description": "Allows the user to update their avatar image.",
+        "description": "Allows the user to upload a new avatar image to Imgur and update their profile picture.",
         "tags": ["Auth"],
-        "security": [{ "BearerAuth": [] }],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -356,8 +360,12 @@
                     "format": "binary",
                     "description": "Avatar image file"
                   }
-                },
-                "required": ["avatar"]
+                }
+              },
+              "encoding": {
+                "avatar": {
+                  "contentType": "image/jpeg, image/png"
+                }
               }
             }
           }
@@ -368,23 +376,29 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
-                },
-                "example": {
-                  "avatarUrl": "https://res.cloudinary.com/your-cloud-name/image/upload/your-file-path.png"
+                  "type": "object",
+                  "properties": {
+                    "avatarUrl": {
+                      "type": "string",
+                      "example": "https://i.imgur.com/example.jpg"
+                    }
+                  }
                 }
               }
             }
           },
           "400": {
-            "description": "Invalid file type or format",
+            "description": "Invalid request (e.g., no file uploaded, wrong format)",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "message": "Invalid file type. Only images are allowed."
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Invalid file type. Only images are allowed."
+                    }
+                  }
                 }
               }
             }
@@ -394,7 +408,29 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal Server Error"
+                    }
+                  }
                 }
               }
             }

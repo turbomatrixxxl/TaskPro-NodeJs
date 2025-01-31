@@ -367,3 +367,24 @@ exports.updateUseravatar = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
+// exports.updateUseravatar = async (req, res) => {
+//   try {
+//     if (!req.file) {
+//       return res.status(400).json({ error: "No file uploaded!" });
+//     }
+
+//     console.log("Received file buffer:", req.file.buffer);
+
+//     // Upload image buffer directly to Imgur
+//     const imgurUrl = await uploadToImgur(req.file.buffer);
+
+//     // Update user avatar in the database
+//     const updatedUser = await updateUser(req.user._id, { avatarURL: imgurUrl });
+
+//     res.status(200).json({ avatarUrl: updatedUser.avatarURL });
+//   } catch (error) {
+//     console.error("Error updating avatar:", error.message);
+//     res.status(500).json({ error: "Internal Server Error" });
+//   }
+// };
