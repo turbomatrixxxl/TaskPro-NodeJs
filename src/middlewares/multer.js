@@ -29,23 +29,3 @@ const upload = multer({
 });
 
 module.exports = upload;
-
-// const multer = require("multer");
-
-// const storage = multer.memoryStorage(); // Store file in memory, not on disk
-
-// const fileFilter = (req, file, cb) => {
-//   if (file.mimetype.startsWith("image/")) {
-//     cb(null, true);
-//   } else {
-//     cb(new Error("Invalid file type. Only images are allowed."), false);
-//   }
-// };
-
-// const upload = multer({
-//   storage: storage,
-//   fileFilter: fileFilter,
-//   limits: { fileSize: 5 * 1024 * 1024 }, // Limit file size to 5MB
-// });
-
-// module.exports = upload;

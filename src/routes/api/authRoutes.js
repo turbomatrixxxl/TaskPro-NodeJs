@@ -29,56 +29,34 @@ router.patch("/users/update", authMiddleware, authController.updateUserInfo);
 //   next();
 // };
 
+// Route to handle avatar upload
+// Route to handle avatar upload
 router.patch(
   "/users/avatar",
   authMiddleware,
+  (req, res, next) => {
+    console.log("Upload started");
+    req.uploadStart = Date.now(); // Store start time in the req object
+    next();
+  },
   upload.single("avatar"),
-  authController.updateUseravatar
+  async (req, res) => {
+    const uploadDuration = Date.now() - req.uploadStart; // Retrieve start time from req object
+    console.log(`Upload finished in ${uploadDuration}ms`);
+
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    console.log("File received:", req.file); // Log the uploaded file
+
+    // Handle further logic like Imgur upload or response formatting here.
+    try {
+      await authController.updateUseravatar(req, res);
+    } catch (error) {
+      return res.status(500).json({ error: "Error updating avatar" });
+    }
+  }
 );
-
-// router.patch(
-//   "/users/avatar",
-//   (req, res, next) => {
-//     console.log("Headers:", req.headers);
-//     console.log("Body before Multer:", req.body);
-//     next();
-//   },
-//   upload.single("avatar"),
-//   async (req, res) => {
-//     console.log("Multer File:", req.file); // Log to check if the file is received
-
-//     if (!req.file) {
-//       return res.status(400).json({ error: "No file uploaded" });
-//     }
-
-//     res.json({ message: "Upload successful", file: req.file });
-//   }
-// );
-
-// router.patch(
-//   "/users/avatar",
-//   authMiddleware,
-//   testUploadMiddleware,
-//   (req, res, next) => {
-//     console.log("✅ Route hit!");
-//     console.log("Headers:", req.headers);
-//     console.log("Body before Multer:", req.body);
-
-//     // Send a response immediately to confirm route is reached
-//     return res.status(200).json({ message: "Route reached. Check logs." });
-
-//     next(); // This will never execute due to the return above
-//   },
-//   upload.single("avatar"),
-//   async (req, res) => {
-//     console.log("Multer File:", req.file);
-
-//     if (!req.file) {
-//       return res.status(400).json({ error: "No file uploaded" });
-//     }
-
-//     res.json({ message: "Upload successful", file: req.file });
-//   }
-// );
 
 module.exports = router;
