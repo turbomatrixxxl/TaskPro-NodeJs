@@ -16,7 +16,6 @@ async function uploadToImgur(imagePath) {
       },
     });
 
-    // Check if the upload was successful
     if (response.data.success) {
       console.log("Image uploaded successfully:", response.data.data.link);
       return response.data.data.link; // Return the image URL
@@ -26,16 +25,16 @@ async function uploadToImgur(imagePath) {
       );
     }
   } catch (error) {
-    // Enhanced error logging
-    console.error(
-      "Error uploading to Imgur:",
-      error.response ? error.response.data : error.message
-    );
+    console.error("Error uploading to Imgur:", error.message);
+    if (error.response) {
+      console.error("Imgur API Response:", error.response.data);
+      // Log the full headers to help with debugging
+      console.error("Imgur Response Headers:", error.response.headers);
+    }
     throw new Error(
       "Failed to upload image to Imgur. Please check the server logs."
     );
   } finally {
-    // Clean up the temporary file if it exists
     if (fs.existsSync(imagePath)) {
       fs.unlinkSync(imagePath);
       console.log("Temporary image file deleted:", imagePath);
