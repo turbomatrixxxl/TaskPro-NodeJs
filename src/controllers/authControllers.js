@@ -26,7 +26,7 @@ const bcrypt = require("bcryptjs");
 
 // const cloudinary = require("../config/cloudinary");
 
-const { s3Client } = require("../config/s3Config");
+const { s3Client } = require("../config/s3Client");
 
 exports.register = async (req, res, next) => {
   const { username, email, password } = req.body;
