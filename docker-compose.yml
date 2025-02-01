@@ -16,8 +16,8 @@ services:
       # Cloudflare R2 environment variables removed (handled in Render)
     depends_on:
       - mongo # If you're using MongoDB
-    volumes:
-      - ./src/public/avatars:/usr/src/server/src/public/avatars # Ensure avatar directory is persistent
+    # volumes:
+    #  - ./src/public/avatars:/usr/src/server/src/public/avatars # Ensure avatar directory is persistent
 
   mongo:
     image: mongo:latest # MongoDB for user data storage

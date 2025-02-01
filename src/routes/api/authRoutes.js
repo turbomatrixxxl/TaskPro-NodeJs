@@ -30,6 +30,16 @@ router.patch(
     next();
   },
   upload.single("avatar"), // Multer handles the file upload
+  (err, req, res, next) => {
+    if (err) {
+      // Multer error or any error during the upload
+      return res.status(400).json({
+        status: "fail",
+        message: err.message || "File upload error",
+      });
+    }
+    next(); // Proceed to the next middleware if no error
+  },
   authController.updateUseravatar // Delegate to the controller for further processing
 );
 
