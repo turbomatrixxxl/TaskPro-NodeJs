@@ -1,8 +1,5 @@
-import AWS from "aws-sdk";
-import dotenv from "dotenv";
-
-// Load environment variables from .env file
-dotenv.config();
+const AWS = require("aws-sdk");
+require("dotenv").config();
 
 // Set your Cloudflare R2 credentials here using the environment variables
 const ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID;
@@ -18,4 +15,4 @@ const s3Client = new AWS.S3({
   s3BucketEndpoint: true,
 });
 
-export default s3Client;
+module.exports = { s3Client };
