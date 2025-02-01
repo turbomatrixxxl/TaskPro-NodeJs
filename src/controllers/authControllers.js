@@ -435,12 +435,12 @@ const upload = multer({
 exports.updateUseravatar = async (req, res) => {
   try {
     // Ensure a file is uploaded and present in the body
-    if (!req.body || !req.body.file) {
+    if (!req.file) {
       return res.status(400).json({ error: "No file uploaded!" });
     }
 
     // Get file content from the request body (assuming it is a buffer)
-    const fileBuffer = Buffer.from(req.body.file, "base64");
+    const fileBuffer = Buffer.from(req.file, "base64");
 
     // Generate a file name (you can customize this)
     const fileName = `avatar-${Date.now()}.jpg`; // For example, you can use a timestamp for uniqueness
