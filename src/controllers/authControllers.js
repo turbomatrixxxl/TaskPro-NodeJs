@@ -424,7 +424,7 @@ exports.updateUserInfo = async (req, res, next) => {
 // };
 
 // AWS S3 storage
-export const updateUseravatar = async (req, res) => {
+exports.updateUseravatar = async (req, res) => {
   try {
     console.log("File path from Multer:", req.file?.path); // Ensure Multer processes the file
 
