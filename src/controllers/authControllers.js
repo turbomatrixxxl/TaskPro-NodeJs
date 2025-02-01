@@ -27,6 +27,8 @@ const bcrypt = require("bcryptjs");
 // const cloudinary = require("../config/cloudinary");
 
 const { s3Client } = require("../config/s3Client");
+const multer = require("multer");
+const sharp = require("sharp");
 
 exports.register = async (req, res, next) => {
   const { username, email, password } = req.body;
@@ -424,54 +426,58 @@ exports.updateUserInfo = async (req, res, next) => {
 // };
 
 // AWS S3 storage
-exports.updateUseravatar = async (req, res) => {
-  try {
-    console.log("File path from Multer:", req.file?.path); // Ensure Multer processes the file
+// Multer setup to handle file uploads
+const upload = multer({
+  storage: multer.memoryStorage(), // Store the file in memory (as a buffer)
+  limits: { fileSize: 10 * 1024 * 1024 }, // Limit file size to 10MB (adjust as needed)
+});
 
-    // Check if the file was uploaded by Multer
-    if (!req.file) {
-      return res.status(400).json({ error: "No file uploaded!" });
+exports.updateUseravatar = [
+  // Multer middleware to handle the file upload
+  upload.single("avatar"), // "avatar" is the field name in the form
+
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded!" });
+      }
+
+      // Resize the image to 32x32 using sharp
+      const resizedImageBuffer = await sharp(req.file.buffer)
+        .resize(32, 32) // Resize to 32x32 pixels
+        .toFormat("jpeg") // Convert to JPEG (you can change this based on your needs)
+        .toBuffer();
+
+      // Generate a file name (you can customize this)
+      const fileName = `avatar-${Date.now()}.jpg`; // Unique name using timestamp
+
+      // Upload the resized image to R2
+      const params = {
+        Bucket: process.env.R2_BUCKET_NAME, // Cloudflare R2 Bucket name
+        Key: fileName, // The file name to store in R2
+        Body: resizedImageBuffer, // The resized image buffer
+        ContentType: "image/jpeg", // MIME type (set to JPEG for resized image)
+      };
+
+      const uploadResult = await s3Client.upload(params).promise();
+      const r2Url = uploadResult.Location; // URL of the uploaded image in R2
+
+      // Update the user's avatar URL in the database
+      const updatedUser = await updateUser(req.user._id, { avatarURL: r2Url });
+
+      if (!updatedUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Respond with the updated avatar URL
+      res.status(200).json({ avatarUrl: updatedUser.avatarURL });
+    } catch (error) {
+      console.error("Error updating avatar:", error.message);
+      res.status(500).json({
+        error: "Internal Server Error",
+        errorMessage:
+          error.message || "An error occurred while updating the avatar",
+      });
     }
-
-    const imagePath = req.file.path;
-    const fileName = path.basename(imagePath); // Get the file name for uploading
-
-    // Upload the image to Cloudflare R2
-    const fileContent = fs.readFileSync(imagePath); // Read the file content
-
-    const params = {
-      Bucket: process.env.BUCKET_NAME, // Your bucket name
-      Key: fileName, // The file name to store on R2
-      Body: fileContent, // The file content
-      ContentType: req.file.mimetype, // Mime type of the file
-    };
-
-    // Upload the file to R2
-    const uploadResult = await s3Client.upload(params).promise();
-    const r2Url = uploadResult.Location; // URL of the uploaded image in R2
-
-    // Delete the temporary file after uploading to R2
-    if (fs.existsSync(imagePath)) {
-      fs.unlinkSync(imagePath);
-      console.log("Temporary image file deleted:", imagePath);
-    }
-
-    // Update the user's avatar URL in the database
-    const updatedUser = await updateUser(req.user._id, { avatarURL: r2Url });
-
-    if (!updatedUser) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    // Respond with the updated avatar URL
-    res.status(200).json({ avatarUrl: updatedUser.avatarURL });
-  } catch (error) {
-    console.error("Error updating avatar:", error.message);
-    // Provide a clear error message to the frontend
-    res.status(500).json({
-      error: "Internal Server Error",
-      errorMessage:
-        error.message || "An error occurred while updating the avatar",
-    });
-  }
-};
+  },
+];
