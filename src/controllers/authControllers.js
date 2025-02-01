@@ -15,16 +15,18 @@ const { extractUserId } = require("../middlewares/extractUserId");
 const fs = require("fs").promises;
 const path = require("path");
 
-const { Jimp } = require("jimp");
+// const { Jimp } = require("jimp");
 // reactivated jimp import
 
 const Joi = require("joi");
 
 const bcrypt = require("bcryptjs");
 
-const { uploadToImgur } = require("../utils/imgur"); // Move the function to a utility file
+// const { uploadToImgur } = require("../utils/imgur"); // Move the function to a utility file
 
 // const cloudinary = require("../config/cloudinary");
+
+const { s3Client } = require("../config/s3Config");
 
 exports.register = async (req, res, next) => {
   const { username, email, password } = req.body;
@@ -234,6 +236,7 @@ exports.updateUserInfo = async (req, res, next) => {
   }
 };
 
+// Local storage
 // exports.updateUseravatar = async (req, res) => {
 //   try {
 //     if (!req.file) {
@@ -302,6 +305,7 @@ exports.updateUserInfo = async (req, res, next) => {
 //   }
 // };
 
+// Cloudinary storage
 // exports.updateUseravatar = async (req, res) => {
 //   try {
 //     if (!req.file) {
@@ -344,6 +348,7 @@ exports.updateUserInfo = async (req, res, next) => {
 //   }
 // };
 
+// Imgur storage
 // exports.updateUseravatar = async (req, res) => {
 //   try {
 //     console.log("File path from Multer:", req.file?.path); // Ensure Multer processes the file
@@ -374,7 +379,52 @@ exports.updateUserInfo = async (req, res, next) => {
 //   }
 // };
 
-exports.updateUseravatar = async (req, res) => {
+// Imgur storage modified with conditional deletion of the file if not deleted only
+// exports.updateUseravatar = async (req, res) => {
+//   try {
+//     console.log("File path from Multer:", req.file?.path); // Ensure Multer processes the file
+
+//     // Check if the file was uploaded by Multer
+//     if (!req.file) {
+//       return res.status(400).json({ error: "No file uploaded!" });
+//     }
+
+//     const imagePath = req.file.path;
+
+//     // Upload the image to Imgur and retrieve the URL
+//     const imgurUrl = await uploadToImgur(imagePath);
+//     if (!imgurUrl) {
+//       return res.status(500).json({ error: "Failed to upload to Imgur" });
+//     }
+
+//     // Only delete the file if it exists
+//     if (fs.existsSync(imagePath)) {
+//       fs.unlinkSync(imagePath); // Delete the temporary file after upload
+//       console.log("Temporary image file deleted:", imagePath);
+//     }
+
+//     // Update the user's avatar URL in the database
+//     const updatedUser = await updateUser(req.user._id, { avatarURL: imgurUrl });
+
+//     if (!updatedUser) {
+//       return res.status(404).json({ error: "User not found" });
+//     }
+
+//     // Respond with the updated avatar URL
+//     res.status(200).json({ avatarUrl: updatedUser.avatarURL });
+//   } catch (error) {
+//     console.error("Error updating avatar:", error.message);
+//     // Provide a clear error message to the frontend
+//     res.status(500).json({
+//       error: "Internal Server Error",
+//       errorMessage:
+//         error.message || "An error occurred while updating the avatar",
+//     });
+//   }
+// };
+
+// AWS S3 storage
+export const updateUseravatar = async (req, res) => {
   try {
     console.log("File path from Multer:", req.file?.path); // Ensure Multer processes the file
 
@@ -384,21 +434,30 @@ exports.updateUseravatar = async (req, res) => {
     }
 
     const imagePath = req.file.path;
+    const fileName = path.basename(imagePath); // Get the file name for uploading
 
-    // Upload the image to Imgur and retrieve the URL
-    const imgurUrl = await uploadToImgur(imagePath);
-    if (!imgurUrl) {
-      return res.status(500).json({ error: "Failed to upload to Imgur" });
-    }
+    // Upload the image to Cloudflare R2
+    const fileContent = fs.readFileSync(imagePath); // Read the file content
 
-    // Only delete the file if it exists
+    const params = {
+      Bucket: process.env.BUCKET_NAME, // Your bucket name
+      Key: fileName, // The file name to store on R2
+      Body: fileContent, // The file content
+      ContentType: req.file.mimetype, // Mime type of the file
+    };
+
+    // Upload the file to R2
+    const uploadResult = await s3Client.upload(params).promise();
+    const r2Url = uploadResult.Location; // URL of the uploaded image in R2
+
+    // Delete the temporary file after uploading to R2
     if (fs.existsSync(imagePath)) {
-      fs.unlinkSync(imagePath); // Delete the temporary file after upload
+      fs.unlinkSync(imagePath);
       console.log("Temporary image file deleted:", imagePath);
     }
 
     // Update the user's avatar URL in the database
-    const updatedUser = await updateUser(req.user._id, { avatarURL: imgurUrl });
+    const updatedUser = await updateUser(req.user._id, { avatarURL: r2Url });
 
     if (!updatedUser) {
       return res.status(404).json({ error: "User not found" });

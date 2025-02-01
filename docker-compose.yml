@@ -8,7 +8,12 @@ services:
     restart: always # Restarts container if it crashes
     environment:
       - NODE_ENV=production
-      - IMGUR_CLIENT_ID=your_client_id # Add your Imgur Client ID here
+      - IMGUR_CLIENT_ID=your_client_id # Add your Imgur Client ID here (remove if not used)
+      # Old Cloudinary Config (commented out for reference)
+      # - CLOUDINARY_CLOUD_NAME=dlujcegs4
+      # - CLOUDINARY_API_KEY=378123916746425
+      # - CLOUDINARY_API_SECRET=WzrgRiXOXtYuvcOmbVLrL9_gVkk
+      # Cloudflare R2 environment variables removed (handled in Render)
     depends_on:
       - mongo # If you're using MongoDB
     volumes:
