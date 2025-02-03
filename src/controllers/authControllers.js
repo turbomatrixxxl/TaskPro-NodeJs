@@ -147,6 +147,8 @@ exports.verifyUserEmail = async (req, res) => {
 
     // res.status(200).json({ message: "User successfully verified", code: 200 });
     res.setHeader("Content-Type", "text/html");
+    console.log("Redirecting to:", "https://turbomatrixxxl.github.io/TaskPro/");
+
     return res.redirect(302, "https://turbomatrixxxl.github.io/TaskPro/");
   } catch (error) {
     res
