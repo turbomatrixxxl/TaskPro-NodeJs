@@ -146,7 +146,7 @@ exports.verifyUserEmail = async (req, res) => {
     await verifyUserEmail(verificationToken);
 
     res.status(200).json({ message: "User successfully verified", code: 200 });
-    return res.redirect(302, "https://taskpro-nodejs.onrender.com");
+    return res.redirect(302, "https://turbomatrixxxl.github.io/TaskPro/");
   } catch (error) {
     res
       .status(404)
